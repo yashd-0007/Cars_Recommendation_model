@@ -106,10 +106,6 @@ const BrowseCars = () => {
           )}
         </div>
       </main>
-      
-      <footer className="py-8 text-center text-sm text-muted-foreground border-t border-border bg-card/30">
-        <p>© 2026 DreamDrive · Browse Section</p>
-      </footer>
     </div>
   );
 };

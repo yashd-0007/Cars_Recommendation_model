@@ -104,10 +104,6 @@ const CarDetails = () => {
         <SimilarCars currentCar={car} allCars={allCars} />
         
       </main>
-
-      <footer className="py-8 text-center text-sm text-muted-foreground border-t border-border">
-        <p>© 2026 DreamDrive · Premium Automotive Index</p>
-      </footer>
     </div>
   );
 };

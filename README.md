@@ -51,6 +51,3 @@ DreamDrive is fully configured to be hosted online using **GitHub Pages**.
 - Implement a more advanced ML version.
 - Integrate real-time updating car data.
 - Develop user login, saving, and personalization features.
-
-## Author
-**[Your Name]**

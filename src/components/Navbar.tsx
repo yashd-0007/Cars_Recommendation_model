@@ -86,7 +86,7 @@ const Navbar = () => {
                 <Link to="/#top-recommended" onClick={(e) => handleAnchorClick(e, "#top-recommended")} className={DropdownItemStyles}>
                   <Star className="w-4 h-4 text-amber-500" /> Top Recommended Cars
                 </Link>
-                <Link to="/#contact-us" onClick={(e) => handleAnchorClick(e, "#contact-us")} className={DropdownItemStyles}>
+                <Link to="/#contact" onClick={(e) => handleAnchorClick(e, "#contact")} className={DropdownItemStyles}>
                   <Phone className="w-4 h-4" /> Contact Us
                 </Link>
               </div>
@@ -153,7 +153,7 @@ const Navbar = () => {
               <Link to="/#top-recommended" className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted" onClick={(e) => handleAnchorClick(e, "#top-recommended")}>
                 <Star className="w-4 h-4 text-amber-500" /> Top Recommended Cars
               </Link>
-              <Link to="/#contact-us" className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted" onClick={(e) => handleAnchorClick(e, "#contact-us")}>
+              <Link to="/#contact" className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted" onClick={(e) => handleAnchorClick(e, "#contact")}>
                 <Phone className="w-4 h-4" /> Contact Us
               </Link>
             </div>

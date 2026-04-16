@@ -66,10 +66,6 @@ const Index = () => {
       <div id="reviews">
         <TestimonialsCarousel />
       </div>
-      <footer id="contact-us" className="py-8 text-center text-sm text-muted-foreground border-t border-border">
-        <p>© 2026 DreamDrive · AI-Powered Car Recommendations</p>
-        <p className="mt-2 text-xs opacity-70">Contact Us: hello@dreamdrive.test | +91 98765 43210</p>
-      </footer>
     </div>
   );
 };
