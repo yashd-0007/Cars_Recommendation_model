@@ -1,42 +1,54 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { User, Mail, ShieldCheck, LogOut, Calendar, Car } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 interface UserPayload {
+  id: number;
   name: string;
   email: string;
-  joinDate: string;
+  createdAt: string;
   role: string;
 }
 
 const Profile = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<UserPayload | null>(null);
+  const { user, logout } = useAuth();
+  const [bookings, setBookings] = useState([]);
 
   useEffect(() => {
-    // Extract the user data that was saved exactly during the successful auth controller payload
-    const storedUser = localStorage.getItem("dreamDriveUser");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    if (user) {
+      fetch(`http://localhost:5001/api/bookings/my/${user.id}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) setBookings(data.data);
+        })
+        .catch(err => console.error("Failed to fetch bookings", err));
     }
-  }, []);
+  }, [user]);
 
   const handleLogout = () => {
-    // Clear credentials globally
-    localStorage.removeItem("dreamDriveUser");
+    // Clear credentials via context
+    logout();
     // Redirect cleanly
     navigate("/login");
   };
 
   if (!user) return null; // Protective fallback while redirecting
 
-  // Format the ISO Date cleanly
-  const formattedDate = new Date(user.joinDate).toLocaleDateString("en-US", {
-    month: "long",
-    year: "numeric"
-  });
+  // Format the ISO Date cleanly with a fallback
+  let formattedDate = "Recently";
+  if (user.createdAt) {
+    const d = new Date(user.createdAt);
+    if (!isNaN(d.getTime())) {
+      formattedDate = d.toLocaleDateString("en-US", {
+        month: "long",
+        year: "numeric"
+      });
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
@@ -86,6 +98,8 @@ const Profile = () => {
             </div>
           </div>
 
+
+
           {/* Subsidiary Membership Tag */}
           <div className="space-y-8">
             <div className="bg-card border border-border p-6 rounded-3xl" style={{ boxShadow: "var(--shadow-card)" }}>
@@ -103,6 +117,14 @@ const Profile = () => {
             </div>
 
             {/* Quick Actions Array */}
+            <Button 
+               onClick={() => navigate("/my-test-drives")} 
+               variant="outline" 
+               className="w-full py-6 text-base justify-start hover:border-primary/50 transition-colors bg-primary/5 border-primary/20 hover:bg-primary/10 text-primary"
+             >
+               <Calendar className="mr-3 w-5 h-5" />
+               View My Test Drives
+            </Button>
             <Button 
                onClick={() => navigate("/")} 
                variant="outline" 

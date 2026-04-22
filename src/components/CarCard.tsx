@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Car, formatPrice } from "@/lib/carData";
 import { getCarImage } from "@/lib/carImages";
+import { formatMileage } from "@/lib/formatters";
 import { Badge } from "@/components/ui/badge";
 import { Fuel, Users, Calendar, Gauge, Cog } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -74,8 +75,8 @@ const CarCard = ({ car, index }: CarCardProps) => {
             {car.transmission}
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Gauge className="w-3.5 h-3.5 text-primary" />
-            {car.mileage > 0 ? `${car.mileage} kmpl` : "N/A"}
+            <Gauge className="w-3.5 h-3.5 text-primary shrink-0" />
+            <span className="truncate">{formatMileage(car.mileage, car.fuel_type)}</span>
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Calendar className="w-3.5 h-3.5 text-primary" />

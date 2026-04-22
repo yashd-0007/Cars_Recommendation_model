@@ -1,4 +1,5 @@
 import { Car } from "@/lib/carData";
+import { formatEngineCC } from "@/lib/formatters";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Star } from "lucide-react";
 
@@ -11,9 +12,9 @@ const CarHighlights = ({ car }: CarHighlightsProps) => {
   const generateHighlights = () => {
     const highlights = [];
     
-    // Mileage
-    if (car.mileage >= 20) highlights.push("Highly Fuel Efficient");
-    else if (car.mileage >= 15) highlights.push("Good Daily Commuter");
+    // Mileage bounds scaled around normalized boundaries
+    if (car.mileage >= 0.7) highlights.push("Highly Fuel Efficient");
+    else if (car.mileage >= 0.4) highlights.push("Good Daily Commuter");
     
     // Transmission
     if (car.transmission === "Automatic") highlights.push("Easy City Driving");
@@ -24,7 +25,7 @@ const CarHighlights = ({ car }: CarHighlightsProps) => {
     if (car.body_type === "Hatchback") highlights.push("Easy to Park & Maneuver");
     
     // Power & Price Segments
-    if (car.engine_cc >= 2000) highlights.push("High Performance Engine");
+    if (car.engine_cc >= 0.5) highlights.push("High Performance Engine");
     if (car.price_max_inr >= 3000000) highlights.push("Premium Luxury Interiors");
     
     // Safety Net
@@ -55,7 +56,7 @@ const CarHighlights = ({ car }: CarHighlightsProps) => {
       <div className="mt-6 pt-6 border-t border-border">
          <h4 className="font-semibold mb-2">Overview</h4>
          <p className="text-muted-foreground leading-relaxed text-sm md:text-base">
-           The {car.brand} {car.model} is a versatile {car.body_type.toLowerCase()} engineered to deliver a balanced mix of performance and comfort. Featuring a {car.engine_cc > 0 ? `${car.engine_cc}cc` : "refined"} engine paired with a sharp {car.transmission} transmission, it is optimally suited for both urban commutes and long highway drives.
+           The {car.brand} {car.model} is a versatile {car.body_type.toLowerCase()} engineered to deliver a balanced mix of performance and comfort. Featuring a {formatEngineCC(car.engine_cc, car.fuel_type)} engine paired with a sharp {car.transmission} transmission, it is optimally suited for both urban commutes and long highway drives.
          </p>
       </div>
     </div>

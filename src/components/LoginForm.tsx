@@ -7,9 +7,11 @@ import { authApi } from "@/services/authApi";
 import InputField from "./InputField";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { useAuth } from "@/context/AuthContext";
 
 const LoginForm = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -50,8 +52,8 @@ const LoginForm = () => {
       const response = await authApi.login(email, password);
       
       if (response.success) {
-        // Cache the entire verified payload exclusively via localStorage
-        localStorage.setItem("dreamDriveUser", JSON.stringify(response.user));
+        // Cache the entire verified payload exclusively via context
+        login(response.user);
         toast.success(response.message);
         navigate("/profile");
       }

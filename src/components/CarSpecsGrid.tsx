@@ -1,4 +1,5 @@
 import { Car } from "@/lib/carData";
+import { formatEngineCC, formatMileage } from "@/lib/formatters";
 import { 
   Fuel, 
   Cog, 
@@ -18,8 +19,8 @@ const CarSpecsGrid = ({ car }: CarSpecsGridProps) => {
   const specs = [
     { icon: <Fuel className="w-5 h-5 text-primary" />, label: "Fuel Type", value: car.fuel_type },
     { icon: <Cog className="w-5 h-5 text-primary" />, label: "Transmission", value: car.transmission },
-    { icon: <Gauge className="w-5 h-5 text-primary" />, label: "Mileage", value: car.mileage > 0 ? `${car.mileage} kmpl` : "N/A" },
-    { icon: <Settings2 className="w-5 h-5 text-primary" />, label: "Engine CC", value: car.engine_cc > 0 ? `${car.engine_cc} cc` : "N/A" },
+    { icon: <Gauge className="w-5 h-5 text-primary" />, label: "Mileage", value: formatMileage(car.mileage, car.fuel_type) },
+    { icon: <Settings2 className="w-5 h-5 text-primary" />, label: "Engine CC", value: formatEngineCC(car.engine_cc, car.fuel_type) },
     { icon: <Users className="w-5 h-5 text-primary" />, label: "Seating", value: `${car.seating} Persons` },
     { icon: <Calendar className="w-5 h-5 text-primary" />, label: "Launch Year", value: car.launch_year },
     { icon: <CarIcon className="w-5 h-5 text-primary" />, label: "Body Type", value: car.body_type },

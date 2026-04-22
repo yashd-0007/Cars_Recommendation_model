@@ -1,0 +1,109 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      String   @default("USER") // USER, ADMIN
+  createdAt DateTime @default(now())
+
+  wishlists            WishlistItem[]
+  compares             CompareItem[]
+  bookings             TestDriveBooking[]
+  recommendationHistory RecommendationHistory[]
+  financeQuotes        FinanceQuote[]
+  activityLogs         ActivityLog[]
+}
+
+model WishlistItem {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  carId     String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, carId])
+}
+
+model CompareItem {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  carId     String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, carId])
+}
+
+model Dealer {
+  id              Int      @id @default(autoincrement())
+  placeId         String?  @unique
+  name            String
+  city            String
+  address         String
+  phone           String
+  workingHours    String
+  supportedBrands String   // Stored as comma-separated or JSON
+  rating          Float    @default(0.0)
+  lat             Float?
+  lon             Float?
+  createdAt       DateTime @default(now())
+
+  bookings TestDriveBooking[]
+}
+
+model TestDriveBooking {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  dealerId    Int
+  carId       String
+  date        String   // yyyy-mm-dd
+  timeSlot    String   // e.g. "10:00 AM - 11:00 AM"
+  isPriority  Boolean  @default(false)
+  status      String   @default("PENDING") // PENDING, CONFIRMED, COMPLETED, CANCELLED
+  createdAt   DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dealer Dealer @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+}
+
+model RecommendationHistory {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  preferences String
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model FinanceQuote {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  carId       String
+  downPayment Float
+  loanTerm    Int      // months
+  emi         Float
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ActivityLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int?
+  action    String
+  details   String?
+  timestamp DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
