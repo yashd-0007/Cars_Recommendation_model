@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/popover";
 import { Check, ChevronsUpDown } from "lucide-react";
 import CONFIG from "@/config";
+import { cn } from "@/lib/utils";
 
 interface Dealer {
   id: number;
