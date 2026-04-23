@@ -19,6 +19,8 @@ import AdminDashboard from "./pages/AdminDashboard";
 import Footer from "./components/Footer";
 import AdminRoute from "./components/AdminRoute";
 import { AuthProvider } from "./context/AuthContext";
+import ReviewTrigger from "./components/ReviewTrigger";
+import BrandCars from "./pages/BrandCars";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +37,7 @@ const App = () => (
           v7_relativeSplatPath: true,
         }}
       >
+        <ReviewTrigger />
         <div className="flex flex-col min-h-screen">
           <main className="flex-grow">
             <Routes>
@@ -42,6 +45,7 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/car-details/:id" element={<CarDetails />} />
+              <Route path="/brands/:brandName" element={<BrandCars />} />
               <Route
                 path="/profile"
                 element={

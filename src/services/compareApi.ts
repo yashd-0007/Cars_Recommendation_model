@@ -1,4 +1,6 @@
-const API_URL = "http://localhost:5001/api/compare";
+import CONFIG from "@/config";
+
+const API_URL = `${CONFIG.NODE_API_URL}/compare`;
 
 export const compareApi = {
   addCar: async (userId: number, carId: number) => {

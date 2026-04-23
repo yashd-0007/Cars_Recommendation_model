@@ -11,6 +11,7 @@ const getSummary = async (req, res) => {
       totalWishlist,
       totalCompare,
       totalActivity,
+      totalReviews,
       bookingStatusCounts
     ] = await Promise.all([
       prisma.user.count(),
@@ -18,6 +19,7 @@ const getSummary = async (req, res) => {
       prisma.wishlistItem.count(),
       prisma.compareItem.count(),
       prisma.activityLog.count(),
+      prisma.review.count(),
       prisma.testDriveBooking.groupBy({
         by: ['status'],
         _count: true
@@ -30,6 +32,7 @@ const getSummary = async (req, res) => {
       totalWishlist,
       totalCompare,
       totalActivity,
+      totalReviews,
       statusBreakdown: bookingStatusCounts.reduce((acc, curr) => {
         acc[curr.status.toLowerCase()] = curr._count;
         return acc;

@@ -1,4 +1,6 @@
-const API_URL = "http://localhost:5001/api/wishlist";
+import CONFIG from "@/config";
+
+const API_URL = `${CONFIG.NODE_API_URL}/wishlist`;
 
 export const wishlistApi = {
   addCar: async (userId: number, carId: number) => {

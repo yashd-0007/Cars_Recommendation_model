@@ -12,6 +12,7 @@ const bookingRoutes = require("./routes/bookingRoutes");
 const financeRoutes = require("./routes/financeRoutes");
 const analyticsRoutes = require("./routes/analyticsRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const reviewRoutes = require("./routes/reviewRoutes");
 
 const displayDataService = require("./services/displayDataService");
 
@@ -39,6 +40,7 @@ app.use("/api/bookings", bookingRoutes);
 app.use("/api/finance", financeRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/reviews", reviewRoutes);
 
 // Application Status Endpoint
 app.get("/", (req, res) => {

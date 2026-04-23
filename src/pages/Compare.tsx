@@ -71,7 +71,9 @@ const Compare = () => {
       <div className="flex-1 flex overflow-x-auto">
         {comparedCars.map((car) => (
           <div key={car.index} className="flex-1 min-w-[280px] p-4 text-sm text-foreground text-center border-r border-border last:border-r-0 flex items-center justify-center">
-            {typeof field === 'function' ? field(car) : car[field]}
+            {typeof field === 'function' 
+              ? field(car) 
+              : (typeof car[field] === 'object' ? JSON.stringify(car[field]) : (car[field] as React.ReactNode))}
           </div>
         ))}
       </div>

@@ -25,9 +25,23 @@ const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
   const [city, setCity] = useState<string>("Any");
   const [lifestyle, setLifestyle] = useState<string>("Any");
 
+  // Derive dynamic budget ceiling from data
+  const maxCarPrice = cars.length > 0 
+    ? cars.reduce((max, car) => Math.max(max, car.price_max_inr), 0)
+    : 15000000;
+    
+  const sliderMax = Math.max(15000000, Math.ceil(maxCarPrice / 1000000) * 1000000);
+
   useEffect(() => {
     loadCarData().then(setCars);
   }, []);
+
+  // Update budget if it exceeds the new max (though unlikely as max only grows)
+  useEffect(() => {
+    if (budget > sliderMax) {
+      setBudget(sliderMax);
+    }
+  }, [sliderMax]);
 
   const fuelTypes = ["Any", ...getUniqueFuelTypes(cars)];
   const bodyTypes = ["Any", ...getUniqueBodyTypes(cars)];
@@ -94,8 +108,8 @@ const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
                     value={[monthlySalary]}
                     onValueChange={([v]) => setMonthlySalary(v)}
                     min={10000}
-                    max={1000000}
-                    step={5000}
+                    max={2000000}
+                    step={10000}
                     className="flex-1"
                   />
                   <span className="text-sm font-medium text-primary min-w-[100px] text-right">
@@ -114,8 +128,8 @@ const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
                     value={[budget]}
                     onValueChange={([v]) => setBudget(v)}
                     min={500000}
-                    max={15000000}
-                    step={100000}
+                    max={sliderMax}
+                    step={500000}
                     className="flex-1"
                   />
                   <span className="text-sm font-medium text-primary min-w-[100px] text-right">

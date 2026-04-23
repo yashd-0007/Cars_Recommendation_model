@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import CONFIG from "@/config";
 import { Calendar, Clock, MapPin, Car, CheckCircle, Clock3, XCircle, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -36,7 +37,7 @@ export default function MyTestDrives() {
 
   const fetchBookings = async () => {
     try {
-      const res = await fetch(`http://localhost:5001/api/bookings/my/${user?.id}`);
+      const res = await fetch(`${CONFIG.NODE_API_URL}/bookings/my/${user?.id}`);
       const data = await res.json();
       if (data.success) {
         setBookings(data.data);
@@ -54,7 +55,7 @@ export default function MyTestDrives() {
     }
 
     try {
-      const res = await fetch(`http://localhost:5001/api/bookings/${bookingId}/cancel`, {
+      const res = await fetch(`${CONFIG.NODE_API_URL}/bookings/${bookingId}/cancel`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

@@ -9,6 +9,8 @@ import ResultsSection from "@/components/ResultsSection";
 import RecommendedCars from "@/components/RecommendedCars";
 import EmiCalculator from "@/components/EmiCalculator";
 import TestimonialsCarousel from "@/components/TestimonialsCarousel";
+import BrandShowcase from "@/components/BrandShowcase";
+import FeaturedCars from "@/components/FeaturedCars";
 
 const Index = () => {
   const [results, setResults] = useState<Car[]>([]);
@@ -52,6 +54,8 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <HeroSection onGetStarted={handleGetStarted} />
+      <BrandShowcase />
+      <FeaturedCars />
       <FeaturesSection />
       <SearchForm onSearch={handleSearch} isLoading={isLoading} />
       <div ref={resultsRef}>

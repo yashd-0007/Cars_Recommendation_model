@@ -49,7 +49,7 @@ const loginUser = async (req, res) => {
 // @access  Public
 const registerUser = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, city } = req.body;
 
     // Validate boundaries conservatively
     if (!name || !email || !password) {
@@ -80,7 +80,8 @@ const registerUser = async (req, res) => {
         name,
         email,
         password,
-        role: "USER"
+        role: "USER",
+        city: city || null
       }
     });
 

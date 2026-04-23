@@ -1,51 +1,35 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "./ui/button";
 import TestimonialCard, { TestimonialType } from "./TestimonialCard";
+import { reviewApi, Review } from "@/services/reviewApi";
+import { useAuth } from "@/context/AuthContext";
+import ReviewModal from "./ReviewModal";
+import { toast } from "sonner";
 
-const testimonials: TestimonialType[] = [
+const staticTestimonials: TestimonialType[] = [
   {
-    id: 1,
+    id: "s1",
     name: "Rahul Sharma",
     city: "Mumbai",
     rating: 5,
     text: "DreamDrive helped me find the perfect SUV within my budget in just minutes. The AI suggestions were surprisingly accurate.",
   },
   {
-    id: 2,
+    id: "s2",
     name: "Priya Verma",
     city: "Pune",
     rating: 5,
     text: "I was overwhelmed by all the options out there, but the recommendation engine narrowed it down perfectly to what I actually needed.",
   },
   {
-    id: 3,
+    id: "s3",
     name: "Amit Patel",
     city: "Ahmedabad",
     rating: 5,
     text: "The premium feel of this platform matched the luxury car I was looking for. Highly recommend to any serious car buyer.",
-  },
-  {
-    id: 4,
-    name: "Sneha Kulkarni",
-    city: "Bangalore",
-    rating: 4,
-    text: "Very smooth and intuitive process. I loved the EMI calculator and how easily I could compare different variants.",
-  },
-  {
-    id: 5,
-    name: "Rohit Mehta",
-    city: "Delhi",
-    rating: 5,
-    text: "Absolutely brilliant! Found my dream sedan without any of the usual dealership hassle. The AI knows cars better than most salesmen.",
-  },
-  {
-    id: 6,
-    name: "Ankit Singh",
-    city: "Hyderabad",
-    rating: 5,
-    text: "From start to finish, the experience was flawless. The clean design and accurate matching algorithm saved me weeks of research.",
   },
 ];
 
@@ -53,27 +37,75 @@ const TestimonialsCarousel = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1200);
+  const [displayReviews, setDisplayReviews] = useState<TestimonialType[]>(staticTestimonials);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleWriteReviewClick = () => {
+    if (!isAuthenticated) {
+      toast.error("Please sign in to write a review.");
+      navigate("/login", { state: { from: location } });
+      return;
+    }
+    setIsModalOpen(true);
+  };
+
+  const fetchReviews = async () => {
+    try {
+      const realReviews = await reviewApi.getApprovedReviews();
+      if (realReviews && realReviews.length > 0) {
+        const mapped = realReviews.map((r: Review) => ({
+          id: r.id,
+          name: r.displayName || r.user?.name || "Verified User",
+          city: r.user?.city || "India",
+          text: r.comment,
+          rating: r.rating
+        }));
+        // Merge real reviews with a few static ones for variety if real count is low
+        setDisplayReviews(mapped.length < 3 ? [...mapped, ...staticTestimonials.slice(0, 3 - mapped.length)] : mapped);
+      }
+    } catch (err) {
+      console.error("Failed to fetch real reviews, using static data.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
+    fetchReviews();
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   const nextSlide = useCallback(() => {
-    setCurrentIndex((prev) => (prev + 1) % testimonials.length);
-  }, []);
+    if (displayReviews.length === 0) return;
+    setCurrentIndex((prev) => (prev + 1) % displayReviews.length);
+  }, [displayReviews.length]);
 
   const prevSlide = useCallback(() => {
-    setCurrentIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
-  }, []);
+    if (displayReviews.length === 0) return;
+    setCurrentIndex((prev) => (prev - 1 + displayReviews.length) % displayReviews.length);
+  }, [displayReviews.length]);
 
-  // Auto-scroll every 5 seconds unless hovered
+  // Auto-scroll every 6 seconds unless hovered
   useEffect(() => {
-    if (isHovered) return;
-    const timer = setInterval(nextSlide, 5000);
+    if (isHovered || displayReviews.length <= 1) return;
+    const timer = setInterval(nextSlide, 6000);
     return () => clearInterval(timer);
-  }, [isHovered, nextSlide]);
+  }, [isHovered, nextSlide, displayReviews.length]);
+
+  if (isLoading && displayReviews === staticTestimonials) {
+    return (
+      <div className="py-24 flex items-center justify-center">
+        <Loader2 className="w-10 h-10 text-primary animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <section className="py-24 bg-secondary/30 relative overflow-hidden">
@@ -93,11 +125,31 @@ const TestimonialsCarousel = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-lg text-muted-foreground mt-4"
+            className="text-lg text-muted-foreground mt-4 mb-8"
           >
             Discover how DreamDrive helped people find their perfect car.
           </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+          >
+            <Button
+              onClick={handleWriteReviewClick}
+              size="lg"
+              className="rounded-full shadow-md hover:shadow-lg transition-all text-md font-semibold px-8"
+            >
+              Write a Review
+            </Button>
+          </motion.div>
         </div>
+
+        <ReviewModal 
+          isOpen={isModalOpen} 
+          onClose={() => setIsModalOpen(false)}
+          onReviewSubmitted={fetchReviews}
+        />
 
         <div 
           className="relative max-w-6xl mx-auto"
@@ -106,13 +158,13 @@ const TestimonialsCarousel = () => {
         >
           {/* Main Carousel Track */}
           <div className="relative h-[420px] md:h-[350px] w-full flex justify-center items-center">
-            {testimonials.map((testimonial, i) => {
+            {displayReviews.map((testimonial, i) => {
               // Calculate relative position based on absolute array length loop
               let diff = i - currentIndex;
               
-              const half = Math.floor(testimonials.length / 2);
-              if (diff > half) diff -= testimonials.length;
-              if (diff < -half) diff += testimonials.length;
+              const half = Math.floor(displayReviews.length / 2);
+              if (diff > half) diff -= displayReviews.length;
+              if (diff < -half) diff += displayReviews.length;
               
               const isMobile = windowWidth < 768;
               
@@ -149,42 +201,44 @@ const TestimonialsCarousel = () => {
           </div>
 
           {/* Controls */}
-          <div className="flex justify-center items-center mt-12 gap-6">
-            <Button
-              variant="outline"
-              size="icon"
-              className="rounded-full w-12 h-12 border-primary/20 hover:bg-primary/5 hover:text-primary transition-colors"
-              onClick={prevSlide}
-            >
-              <ChevronLeft className="w-6 h-6" />
-            </Button>
-            
-            <div className="flex gap-2">
-              {testimonials.map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => {
-                    setCurrentIndex(idx);
-                  }}
-                  className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-                    idx === currentIndex 
-                      ? "bg-primary w-8" 
-                      : "bg-primary/20 hover:bg-primary/50"
-                  }`}
-                  aria-label={`Go to slide ${idx + 1}`}
-                />
-              ))}
-            </div>
+          {displayReviews.length > 1 && (
+            <div className="flex justify-center items-center mt-12 gap-6">
+              <Button
+                variant="outline"
+                size="icon"
+                className="rounded-full w-12 h-12 border-primary/20 hover:bg-primary/5 hover:text-primary transition-colors"
+                onClick={prevSlide}
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </Button>
+              
+              <div className="flex gap-2">
+                {displayReviews.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      setCurrentIndex(idx);
+                    }}
+                    className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                      idx === currentIndex 
+                        ? "bg-primary w-8" 
+                        : "bg-primary/20 hover:bg-primary/50"
+                    }`}
+                    aria-label={`Go to slide ${idx + 1}`}
+                  />
+                ))}
+              </div>
 
-            <Button
-              variant="outline"
-              size="icon"
-              className="rounded-full w-12 h-12 border-primary/20 hover:bg-primary/5 hover:text-primary transition-colors"
-              onClick={nextSlide}
-            >
-              <ChevronRight className="w-6 h-6" />
-            </Button>
-          </div>
+              <Button
+                variant="outline"
+                size="icon"
+                className="rounded-full w-12 h-12 border-primary/20 hover:bg-primary/5 hover:text-primary transition-colors"
+                onClick={nextSlide}
+              >
+                <ChevronRight className="w-6 h-6" />
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </section>

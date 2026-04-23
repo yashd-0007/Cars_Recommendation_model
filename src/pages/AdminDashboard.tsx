@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import { useAuth } from "@/context/AuthContext";
+import CONFIG from "@/config";
 import { 
   Users, 
   Calendar, 
@@ -19,7 +20,12 @@ import {
   BarChart3,
   List,
   User as UserIcon,
-  RefreshCw
+  RefreshCw,
+  MessageSquare,
+  Trash2,
+  Check,
+  X,
+  Star
 } from "lucide-react";
 import { 
   Card, 
@@ -53,6 +59,8 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+import { reviewApi, Review } from "@/services/reviewApi";
 
 interface SummaryStats {
   totalUsers: number;
@@ -60,6 +68,7 @@ interface SummaryStats {
   totalWishlist: number;
   totalCompare: number;
   totalActivity: number;
+  totalReviews: number;
   statusBreakdown: {
     pending: number;
     confirmed: number;
@@ -106,6 +115,7 @@ export default function AdminDashboard() {
   const [bookings, setBookings] = useState<BookingReportItem[]>([]);
   const [activities, setActivities] = useState<ActivityLogItem[]>([]);
   const [users, setUsers] = useState<UserReportItem[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
 
@@ -118,11 +128,12 @@ export default function AdminDashboard() {
     try {
       const headers = { "x-user-id": user?.id.toString() || "" };
       
-      const [statsRes, bookingsRes, activityRes, usersRes] = await Promise.all([
-        fetch("http://localhost:5001/api/admin/summary", { headers }),
-        fetch("http://localhost:5001/api/admin/bookings-report", { headers }),
-        fetch("http://localhost:5001/api/admin/activity-report", { headers }),
-        fetch("http://localhost:5001/api/admin/users-report", { headers })
+      const [statsRes, bookingsRes, activityRes, usersRes, reviewsData] = await Promise.all([
+        fetch(`${CONFIG.NODE_API_URL}/admin/summary`, { headers }),
+        fetch(`${CONFIG.NODE_API_URL}/admin/bookings-report`, { headers }),
+        fetch(`${CONFIG.NODE_API_URL}/admin/activity-report`, { headers }),
+        fetch(`${CONFIG.NODE_API_URL}/admin/users-report`, { headers }),
+        reviewApi.getAdminReviews()
       ]);
 
       const [statsData, bookingsData, activityData, usersData] = await Promise.all([
@@ -136,10 +147,33 @@ export default function AdminDashboard() {
       if (bookingsData.success) setBookings(bookingsData.data);
       if (activityData.success) setActivities(activityData.data);
       if (usersData.success) setUsers(usersData.data);
+      setReviews(reviewsData);
     } catch (error) {
       console.error("Failed to fetch admin data", error);
+      toast.error("Failed to load dashboard data");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleUpdateReviewStatus = async (id: number, status: string) => {
+    try {
+      await reviewApi.updateReviewStatus(id, status);
+      toast.success(`Review ${status.toLowerCase()} successfully`);
+      setReviews(prev => prev.map(r => r.id === id ? { ...r, status: status as any } : r));
+    } catch (error) {
+      toast.error("Failed to update review status");
+    }
+  };
+
+  const handleDeleteReview = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this review?")) return;
+    try {
+      await reviewApi.deleteReview(id);
+      toast.success("Review deleted successfully");
+      setReviews(prev => prev.filter(r => r.id !== id));
+    } catch (error) {
+      toast.error("Failed to delete review");
     }
   };
 
@@ -147,9 +181,11 @@ export default function AdminDashboard() {
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
-      case "confirmed": return "bg-emerald-500/10 text-emerald-600 border-emerald-500/20";
+      case "confirmed":
+      case "approved": return "bg-emerald-500/10 text-emerald-600 border-emerald-500/20";
       case "pending": return "bg-amber-500/10 text-amber-600 border-amber-500/20";
-      case "cancelled": return "bg-red-500/10 text-red-600 border-red-500/20";
+      case "cancelled":
+      case "rejected": return "bg-red-500/10 text-red-600 border-red-500/20";
       case "completed": return "bg-blue-500/10 text-blue-600 border-blue-500/20";
       default: return "bg-slate-500/10 text-slate-600 border-slate-500/20";
     }
@@ -211,10 +247,10 @@ export default function AdminDashboard() {
             description="Test drive appointments"
           />
           <StatsCard 
-            title="Wishlist Saves" 
-            value={stats?.totalWishlist || 0} 
-            icon={<Heart className="w-5 h-5 text-rose-500" />} 
-            description="Cars saved by users"
+            title="Platform Reviews" 
+            value={stats?.totalReviews || 0} 
+            icon={<MessageSquare className="w-5 h-5 text-purple-500" />} 
+            description="User submitted ratings"
           />
           <StatsCard 
             title="Platform Activity" 
@@ -226,17 +262,20 @@ export default function AdminDashboard() {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="overview" className="space-y-6" onValueChange={setActiveTab}>
-          <TabsList className="bg-card border border-border p-1 h-12 gap-1 shadow-sm rounded-xl">
-            <TabsTrigger value="overview" className="rounded-lg px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+          <TabsList className="bg-card border border-border p-1 h-12 gap-1 shadow-sm rounded-xl overflow-x-auto justify-start sm:justify-center">
+            <TabsTrigger value="overview" className="rounded-lg px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground shrink-0">
               <BarChart3 className="w-4 h-4 mr-2" /> Overview
             </TabsTrigger>
-            <TabsTrigger value="bookings" className="rounded-lg px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <TabsTrigger value="bookings" className="rounded-lg px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground shrink-0">
               <Calendar className="w-4 h-4 mr-2" /> Bookings
             </TabsTrigger>
-            <TabsTrigger value="users" className="rounded-lg px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <TabsTrigger value="reviews" className="rounded-lg px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground shrink-0">
+              <MessageSquare className="w-4 h-4 mr-2" /> Reviews
+            </TabsTrigger>
+            <TabsTrigger value="users" className="rounded-lg px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground shrink-0">
               <Users className="w-4 h-4 mr-2" /> Users
             </TabsTrigger>
-            <TabsTrigger value="activity" className="rounded-lg px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <TabsTrigger value="activity" className="rounded-lg px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground shrink-0">
               <Activity className="w-4 h-4 mr-2" /> Activity Log
             </TabsTrigger>
           </TabsList>
@@ -308,41 +347,6 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
             </div>
-
-            {/* Platform Metrics Table */}
-            <Card className="shadow-sm border-border rounded-2xl overflow-hidden">
-              <CardHeader>
-                <CardTitle className="text-lg">Recent Registrations</CardTitle>
-                <CardDescription>New users joining DreamDrive</CardDescription>
-              </CardHeader>
-              <CardContent className="p-0">
-                <Table>
-                  <TableHeader className="bg-slate-50 dark:bg-slate-900/50">
-                    <TableRow>
-                      <TableHead className="pl-6">User</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Joined</TableHead>
-                      <TableHead>Activity</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {users.slice(0, 5).map((u) => (
-                      <TableRow key={u.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/20">
-                        <TableCell className="pl-6 font-medium">{u.name}</TableCell>
-                        <TableCell className="text-muted-foreground">{u.email}</TableCell>
-                        <TableCell>{new Date(u.createdAt).toLocaleDateString()}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="font-normal">{u._count.bookings} Bookings</Badge>
-                            <Badge variant="outline" className="font-normal">{u._count.wishlists} Saves</Badge>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
           </TabsContent>
 
           <TabsContent value="bookings" className="space-y-6">
@@ -390,6 +394,96 @@ export default function AdminDashboard() {
                         </TableCell>
                       </TableRow>
                     ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="reviews" className="space-y-6">
+            <Card className="shadow-sm border-border rounded-2xl overflow-hidden">
+              <CardHeader>
+                <CardTitle className="text-xl">Review Moderation</CardTitle>
+                <CardDescription>Approve or reject user-submitted testimonials</CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader className="bg-slate-50 dark:bg-slate-900/50">
+                    <TableRow>
+                      <TableHead className="pl-6">Reviewer</TableHead>
+                      <TableHead>Rating</TableHead>
+                      <TableHead className="w-[40%]">Comment</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right pr-6">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {reviews.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
+                          No reviews submitted yet.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      reviews.map((r) => (
+                        <TableRow key={r.id}>
+                          <TableCell className="pl-6">
+                            <div className="flex flex-col">
+                              <span className="font-medium">{r.displayName || r.user?.name}</span>
+                              <span className="text-[10px] text-muted-foreground">{r.user?.email}</span>
+                              <span className="text-[9px] text-muted-foreground">{new Date(r.createdAt).toLocaleDateString()}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-0.5">
+                              {[...Array(5)].map((_, i) => (
+                                <Star key={i} className={`w-3 h-3 ${i < r.rating ? "fill-amber-400 text-amber-400" : "text-slate-300"}`} />
+                              ))}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            <p className="line-clamp-2" title={r.comment}>{r.comment}</p>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className={`${getStatusColor(r.status)} border px-2 py-0.5 rounded-full`}>
+                              {r.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right pr-6">
+                            <div className="flex items-center justify-end gap-2">
+                              {r.status === "PENDING" && (
+                                <>
+                                  <Button 
+                                    size="icon" 
+                                    variant="outline" 
+                                    className="w-8 h-8 rounded-full text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                                    onClick={() => handleUpdateReviewStatus(r.id, "APPROVED")}
+                                  >
+                                    <Check className="w-4 h-4" />
+                                  </Button>
+                                  <Button 
+                                    size="icon" 
+                                    variant="outline" 
+                                    className="w-8 h-8 rounded-full text-red-600 hover:text-red-700 hover:bg-red-50"
+                                    onClick={() => handleUpdateReviewStatus(r.id, "REJECTED")}
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </Button>
+                                </>
+                              )}
+                              <Button 
+                                size="icon" 
+                                variant="outline" 
+                                className="w-8 h-8 rounded-full text-slate-400 hover:text-red-600 hover:bg-slate-50"
+                                onClick={() => handleDeleteReview(r.id)}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </CardContent>

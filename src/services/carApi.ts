@@ -1,10 +1,6 @@
-/**
- * DreamDrive Car Display-Data API Client
- * Communicates with the Node.js backend display-data service.
- * Replaces direct CSV parsing with clean, curated backend data.
- */
+import CONFIG from "@/config";
 
-const NODE_API_BASE = "http://localhost:5001/api/cars";
+const NODE_API_BASE = `${CONFIG.NODE_API_URL}/cars`;
 
 export interface DisplayCar {
   displayId: number;

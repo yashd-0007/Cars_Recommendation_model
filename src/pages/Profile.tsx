@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { User, Mail, ShieldCheck, LogOut, Calendar, Car } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import CONFIG from "@/config";
 
 interface UserPayload {
   id: number;
@@ -20,7 +21,7 @@ const Profile = () => {
 
   useEffect(() => {
     if (user) {
-      fetch(`http://localhost:5001/api/bookings/my/${user.id}`)
+      fetch(`${CONFIG.NODE_API_URL}/bookings/my/${user.id}`)
         .then(res => res.json())
         .then(data => {
           if (data.success) setBookings(data.data);

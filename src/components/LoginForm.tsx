@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { LogIn } from "lucide-react";
 import { toast } from "sonner";
@@ -11,12 +11,15 @@ import { useAuth } from "@/context/AuthContext";
 
 const LoginForm = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({});
+
+  const from = (location.state as any)?.from?.pathname || "/";
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string } = {};
@@ -55,7 +58,15 @@ const LoginForm = () => {
         // Cache the entire verified payload exclusively via context
         login(response.user);
         toast.success(response.message);
-        navigate("/profile");
+        
+        // Redirect logic
+        let targetRoute = from;
+        if (targetRoute === "/") {
+          // Default redirects based on role
+          targetRoute = response.user.role === "ADMIN" ? "/admin" : "/";
+        }
+        
+        navigate(targetRoute, { replace: true });
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Invalid email or password. Try yash@example.com / 123456";

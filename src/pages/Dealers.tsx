@@ -20,7 +20,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Check, ChevronsUpDown } from "lucide-react";
-import { cn } from "@/lib/utils";
+import CONFIG from "@/config";
 
 interface Dealer {
   id: number;
@@ -62,8 +62,8 @@ export default function Dealers() {
   const fetchDealers = async () => {
     try {
       const url = cityFilter
-        ? `http://localhost:5001/api/dealers?city=${encodeURIComponent(cityFilter)}`
-        : "http://localhost:5001/api/dealers";
+        ? `${CONFIG.NODE_API_URL}/dealers?city=${encodeURIComponent(cityFilter)}`
+        : `${CONFIG.NODE_API_URL}/dealers`;
       const res = await fetch(url);
       const data = await res.json();
       if (data.success) {

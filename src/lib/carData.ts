@@ -1,5 +1,6 @@
 import Papa from "papaparse";
 import { carApi, DisplayCar } from "@/services/carApi";
+import CONFIG from "@/config";
 
 // ─── Car Interface (Backwards Compatible) ──────────────────────────────────────
 // The existing UI components use this shape. We map DisplayCar → Car seamlessly.
@@ -137,7 +138,7 @@ export async function loadCarData(): Promise<Car[]> {
 
 // Global toggle for Python AI backend
 const USE_PYTHON_AI_BACKEND = true;
-const PYTHON_API_URL = "http://localhost:8000/predict";
+const PYTHON_API_URL = CONFIG.PYTHON_API_URL;
 
 export async function recommendCars(cars: Car[], prefs: UserPreferences): Promise<Car[]> {
   // Option 1: Try the real Python FastAPI Backend for ML recommendations

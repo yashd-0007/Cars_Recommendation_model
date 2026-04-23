@@ -32,7 +32,7 @@ const Navbar = () => {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-background/85 border-b border-border/50 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
         
         {/* Logo Section */}
         <Link to="/" className="flex items-center gap-3 z-50" onClick={() => setIsMobileMenuOpen(false)}>
@@ -164,7 +164,7 @@ const Navbar = () => {
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
-        <div className="lg:hidden absolute top-16 left-0 right-0 bg-background border-b border-border p-4 shadow-xl max-h-[calc(100vh-4rem)] overflow-y-auto z-40">
+        <div className="lg:hidden absolute top-20 left-0 right-0 bg-background border-b border-border p-4 shadow-xl max-h-[calc(100vh-5rem)] overflow-y-auto z-40">
           <div className="flex flex-col gap-4">
             
             <div className="space-y-2 pb-3 border-b border-border/50">

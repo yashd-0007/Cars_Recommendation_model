@@ -13,8 +13,9 @@ const SignupForm = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [city, setCity] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<{ name?: string; email?: string; password?: string; general?: string }>({});
+  const [errors, setErrors] = useState<{ name?: string; email?: string; password?: string; city?: string; general?: string }>({});
 
   const validateForm = () => {
     const newErrors: { name?: string; email?: string; password?: string } = {};
@@ -41,6 +42,11 @@ const SignupForm = () => {
       isValid = false;
     }
 
+    if (!city) {
+      newErrors.city = "City is required";
+      isValid = false;
+    }
+
     setErrors(newErrors);
     return isValid;
   };
@@ -54,13 +60,14 @@ const SignupForm = () => {
     setIsLoading(true);
 
     try {
-      const response = await authApi.signup(name, email, password);
+      const response = await authApi.signup(name, email, password, city);
       
       if (response.success) {
         // Cache the verified payload exclusively via context for automatic sign in
         login(response.user);
         toast.success(response.message);
-        navigate("/profile");
+        // Default to Home or Admin based on role after successful registration
+        navigate(response.user.role === "ADMIN" ? "/admin" : "/");
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Failed to register account. Please try again.";
@@ -100,6 +107,16 @@ const SignupForm = () => {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           error={errors.email}
+          disabled={isLoading}
+        />
+
+        <InputField
+          label="City / Location"
+          type="text"
+          placeholder="E.g., Mumbai, Delhi, Bangalore"
+          value={city}
+          onChange={(e) => setCity(e.target.value)}
+          error={errors.city}
           disabled={isLoading}
         />
 

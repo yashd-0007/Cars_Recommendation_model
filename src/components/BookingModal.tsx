@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { MapPin, Calendar, Clock, CheckCircle, Car } from "lucide-react";
+import CONFIG from "@/config";
 
 interface Dealer {
   id: string | number;
@@ -84,7 +85,7 @@ export function BookingModal({ isOpen, onClose, carId: initialCarId, initialDeal
   const fetchDealers = async () => {
     try {
       // Default to Pune if fetching for general booking without context
-      const res = await fetch("http://localhost:5001/api/dealers?city=Pune");
+      const res = await fetch(`${CONFIG.NODE_API_URL}/dealers?city=Pune`);
       const data = await res.json();
       if (data.success) setDealers(data.data);
     } catch (error) {
@@ -94,7 +95,7 @@ export function BookingModal({ isOpen, onClose, carId: initialCarId, initialDeal
 
   const fetchCars = async () => {
     try {
-      const res = await fetch("http://localhost:5001/api/cars");
+      const res = await fetch(`${CONFIG.NODE_API_URL}/cars`);
       const data = await res.json();
       if (data.success) setCars(data.data);
     } catch (error) {
@@ -116,7 +117,7 @@ export function BookingModal({ isOpen, onClose, carId: initialCarId, initialDeal
 
     setIsLoading(true);
     try {
-      const res = await fetch("http://localhost:5001/api/bookings", {
+      const res = await fetch(`${CONFIG.NODE_API_URL}/bookings`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

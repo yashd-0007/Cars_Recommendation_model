@@ -6,6 +6,7 @@ export interface UserPayload {
   email: string;
   createdAt: string;
   role: string;
+  city?: string;
 }
 
 interface AuthContextType {

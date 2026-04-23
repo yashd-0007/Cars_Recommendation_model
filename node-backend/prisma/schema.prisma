@@ -13,6 +13,7 @@ model User {
   email     String   @unique
   password  String
   role      String   @default("USER") // USER, ADMIN
+  city      String?
   createdAt DateTime @default(now())
 
   wishlists            WishlistItem[]
@@ -21,6 +22,19 @@ model User {
   recommendationHistory RecommendationHistory[]
   financeQuotes        FinanceQuote[]
   activityLogs         ActivityLog[]
+  reviews              Review[]
+}
+
+model Review {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  rating      Int      @default(5)
+  comment     String
+  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  displayName String?
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model WishlistItem {
