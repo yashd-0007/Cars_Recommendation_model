@@ -31,7 +31,7 @@ const App = () => (
         <Toaster />
         <Sonner />
       <BrowserRouter
-        basename="/Cars_Recommendation_model/"
+        basename="/"
         future={{
           v7_startTransition: true,
           v7_relativeSplatPath: true,
