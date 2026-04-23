@@ -8,15 +8,17 @@ const getEnvVar = (key: string, defaultValue: string): string => {
 };
 
 export const CONFIG = {
-  // Backend Node.js API (Main features, auth, wishlist, bookings)
+  // Backend Node.js API
   NODE_API_URL: getEnvVar("VITE_NODE_API_URL", "http://localhost:5001/api"),
-  
-  // Python FastAPI ML Service (AI Recommendations)
+
+  // Python FastAPI ML Service
   PYTHON_API_URL: getEnvVar("VITE_PYTHON_API_URL", "http://localhost:8000/predict"),
-  
+
   // App Metadata
   APP_NAME: "DreamDrive",
-  BASE_PATH: import.meta.env.BASE_URL || "/Cars_Recommendation_model/",
+
+  // Use root path for AWS Amplify / normal hosting
+  BASE_PATH: import.meta.env.BASE_URL || "/",
 };
 
 export default CONFIG;
