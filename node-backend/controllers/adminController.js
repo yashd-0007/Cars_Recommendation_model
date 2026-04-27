@@ -101,6 +101,7 @@ const getUsersReport = async (req, res) => {
         name: true,
         email: true,
         role: true,
+        city: true,
         createdAt: true,
         _count: {
           select: {
@@ -120,9 +121,73 @@ const getUsersReport = async (req, res) => {
   }
 };
 
+// @desc    Get product analytics report
+// @route   GET /api/admin/analytics-report
+// @access  Private/Admin
+const getAnalyticsReport = async (req, res) => {
+  try {
+    const [
+      searchedBrands,
+      searchedCars,
+      wishlistedCars,
+      comparedCars
+    ] = await Promise.all([
+      prisma.activityLog.groupBy({
+        by: ['targetValue'],
+        where: { activityType: 'SEARCH_BRAND' },
+        _count: { targetValue: true },
+        orderBy: { _count: { targetValue: 'desc' } },
+        take: 5
+      }),
+      prisma.activityLog.groupBy({
+        by: ['targetValue'],
+        where: { activityType: 'SEARCH_CAR' },
+        _count: { targetValue: true },
+        orderBy: { _count: { targetValue: 'desc' } },
+        take: 5
+      }),
+      prisma.activityLog.groupBy({
+        by: ['carId'],
+        where: { activityType: 'WISHLIST_ADD' },
+        _count: { carId: true },
+        orderBy: { _count: { carId: 'desc' } },
+        take: 5
+      }),
+      prisma.activityLog.groupBy({
+        by: ['carId'],
+        where: { activityType: 'COMPARE_ADD' },
+        _count: { carId: true },
+        orderBy: { _count: { carId: 'desc' } },
+        take: 5
+      })
+    ]);
+
+    // Resolve car names for the car IDs
+    const displayDataService = require("../services/displayDataService");
+    
+    const resolveName = (id) => {
+      const car = displayDataService.getCarById(parseInt(id, 10));
+      return car ? `${car.brand} ${car.model}` : `Car #${id}`;
+    };
+
+    const report = {
+      topBrands: searchedBrands.map(b => ({ name: b.targetValue, count: b._count.targetValue })),
+      topSearchedModels: searchedCars.map(c => ({ name: c.targetValue, count: c._count.targetValue })),
+      topWishlisted: wishlistedCars.map(w => ({ name: resolveName(w.carId), count: w._count.carId })),
+      topCompared: comparedCars.map(c => ({ name: resolveName(c.carId), count: c._count.carId }))
+    };
+
+    return res.status(200).json({ success: true, data: report });
+  } catch (error) {
+    console.error("Analytics Report Error:", error);
+    return res.status(500).json({ success: false, message: "Internal server error fetching analytics report." });
+  }
+};
+
 module.exports = { 
   getSummary, 
   getBookingsReport, 
   getActivityReport, 
-  getUsersReport 
+  getUsersReport,
+  getAnalyticsReport
 };

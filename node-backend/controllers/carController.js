@@ -4,6 +4,7 @@
  */
 
 const displayDataService = require("../services/displayDataService");
+const contentService = require("../services/contentService");
 const prisma = require("../prismaClient");
 
 // @desc    Get all display-safe cars
@@ -56,7 +57,7 @@ const resolveCars = async (req, res) => {
       await prisma.activityLog.create({
         data: {
           userId: parseInt(userId, 10),
-          action: "RECOMMENDATION_RESOLVE",
+          activityType: "RECOMMENDATION_RESOLVE",
           details: JSON.stringify({ count: resolved.length })
         }
       });
@@ -82,4 +83,62 @@ const browseCars = (req, res) => {
   }
 };
 
-module.exports = { getAllCars, getCarById, resolveCars, browseCars };
+// @desc    Get expert review by car ID
+// @route   GET /api/cars/:id/expert-review
+const getExpertReview = (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const review = contentService.getExpertReview(id);
+    if (!review) {
+      return res.status(404).json({ success: false, message: "Expert review not found for this car." });
+    }
+    return res.status(200).json({ success: true, data: review });
+  } catch (error) {
+    console.error("Expert Review Error:", error);
+    return res.status(500).json({ success: false, message: "Failed to retrieve expert review." });
+  }
+};
+
+// @desc    Get features explained videos by car ID
+// @route   GET /api/cars/:id/features-explained
+const getFeaturesExplained = (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const videos = contentService.getFeaturesExplained(id);
+    if (!videos || videos.length === 0) {
+      return res.status(404).json({ success: false, message: "Features explained videos not found for this car." });
+    }
+    return res.status(200).json({ success: true, data: videos });
+  } catch (error) {
+    console.error("Features Explained Error:", error);
+    return res.status(500).json({ success: false, message: "Failed to retrieve features videos." });
+  }
+};
+
+// @desc    Get available content indices
+// @route   GET /api/cars/content/indices
+const getContentIndices = (req, res) => {
+  try {
+    const expertReviewIds = contentService.getAvailableExpertReviewCarIds();
+    const featuresIds = contentService.getAvailableFeaturesCarIds();
+    return res.status(200).json({ 
+      success: true, 
+      data: {
+        expertReviews: expertReviewIds,
+        features: featuresIds
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Failed to retrieve content indices." });
+  }
+};
+
+module.exports = { 
+  getAllCars, 
+  getCarById, 
+  resolveCars, 
+  browseCars,
+  getExpertReview,
+  getFeaturesExplained,
+  getContentIndices
+};

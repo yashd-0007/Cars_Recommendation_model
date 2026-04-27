@@ -38,7 +38,9 @@ const addCar = async (req, res) => {
     await prisma.activityLog.create({
       data: {
         userId: parseInt(userId, 10),
-        action: "WISHLIST_ADD",
+        activityType: "WISHLIST_ADD",
+        targetType: "car",
+        carId: cIdStr,
         details: JSON.stringify({ carId: cIdStr })
       }
     });
@@ -76,7 +78,9 @@ const removeCar = async (req, res) => {
       await prisma.activityLog.create({
         data: {
           userId: parseInt(userId, 10),
-          action: "WISHLIST_REMOVE",
+          activityType: "WISHLIST_REMOVE",
+          targetType: "car",
+          carId: cIdStr,
           details: JSON.stringify({ carId: cIdStr })
         }
       });

@@ -16,33 +16,32 @@ const ReviewTrigger = () => {
     const sessionDismissed = sessionStorage.getItem(`review_dismissed_${user.id}`);
     if (sessionDismissed) return;
 
+    let timer: NodeJS.Timeout;
+
     const checkEligibilityAndSchedule = async () => {
       try {
-        // 2. Backend check: The source of truth
         const { hasReviewed } = await reviewApi.checkUserReview(user.id);
         
         if (hasReviewed) {
-          // If they've already reviewed, we can even cache this in localStorage to save API calls
           localStorage.setItem(`reviewed_${user.id}`, "true");
           return;
         }
 
-        // 3. Scheduling logic (e.g. after 45s on homepage)
         const isHomePage = location.pathname === "/";
         if (isHomePage) {
-          const timer = setTimeout(() => {
+          timer = setTimeout(() => {
             setIsModalOpen(true);
           }, 45000); // 45 seconds of engagement
-          return () => clearTimeout(timer);
         }
       } catch (error) {
         console.error("Error checking review eligibility:", error);
       }
     };
 
-    const cleanup = checkEligibilityAndSchedule();
+    checkEligibilityAndSchedule();
+    
     return () => {
-      if (typeof cleanup === "function") cleanup();
+      if (timer) clearTimeout(timer);
     };
   }, [isAuthenticated, user, location.pathname]);
 

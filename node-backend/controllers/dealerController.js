@@ -16,7 +16,7 @@ const getDealers = async (req, res) => {
     await prisma.activityLog.create({
       data: {
         userId: userId ? parseInt(userId, 10) : null,
-        action: "DEALER_SEARCH",
+        activityType: "DEALER_SEARCH",
         details: JSON.stringify({ city })
       }
     });

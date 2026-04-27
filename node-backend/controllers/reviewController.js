@@ -1,4 +1,5 @@
 const prisma = require("../prismaClient");
+const { containsInappropriateLanguage, MODERATION_ERROR_MESSAGE } = require("../services/moderationService");
 
 // @desc    Submit a new review
 // @route   POST /api/reviews
@@ -11,6 +12,14 @@ const submitReview = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Please provide userId, rating, and comment.",
+      });
+    }
+
+    // Backend Moderation Check (Source of Truth)
+    if (containsInappropriateLanguage(comment) || containsInappropriateLanguage(displayName)) {
+      return res.status(400).json({
+        success: false,
+        message: MODERATION_ERROR_MESSAGE,
       });
     }
 

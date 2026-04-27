@@ -21,6 +21,11 @@ import AdminRoute from "./components/AdminRoute";
 import { AuthProvider } from "./context/AuthContext";
 import ReviewTrigger from "./components/ReviewTrigger";
 import BrandCars from "./pages/BrandCars";
+import ExpertReview from "./pages/ExpertReview";
+import ExpertReviewsList from "./pages/ExpertReviewsList";
+import FeaturesExplained from "./pages/FeaturesExplained";
+import FeaturesExplainedList from "./pages/FeaturesExplainedList";
+import SearchResults from "./pages/SearchResults";
 
 const queryClient = new QueryClient();
 
@@ -71,7 +76,12 @@ const App = () => (
                 }
               />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="/expert-review/:id" element={<ExpertReview />} />
+              <Route path="/expert-reviews" element={<ExpertReviewsList />} />
+              <Route path="/features-explained/:id" element={<FeaturesExplained />} />
+              <Route path="/features-explained" element={<FeaturesExplainedList />} />
               <Route path="/cars/:category" element={<BrowseCars />} />
+              <Route path="/search" element={<SearchResults />} />
               <Route path="/dealers" element={<Dealers />} />
               <Route
                 path="/my-test-drives"

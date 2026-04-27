@@ -117,6 +117,16 @@ const Profile = () => {
                </div>
             </div>
 
+            {user.role === "ADMIN" && (
+              <Button 
+                onClick={() => navigate("/admin")} 
+                className="w-full py-6 text-base justify-start shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90"
+              >
+                <ShieldCheck className="mr-3 w-5 h-5" />
+                Go to Admin Dashboard
+              </Button>
+            )}
+
             {/* Quick Actions Array */}
             <Button 
                onClick={() => navigate("/my-test-drives")} 

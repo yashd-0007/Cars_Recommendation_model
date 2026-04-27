@@ -1,11 +1,16 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { ChevronDown, Menu, X, CarFront, Zap, TrendingUp, Sparkles, HelpCircle, FileText, Calculator, Star, Phone, User, LogOut, Heart, ArrowLeftRight, MapPin, Calendar, ShieldCheck } from "lucide-react";
+import { ChevronDown, Menu, X, CarFront, Zap, TrendingUp, Sparkles, HelpCircle, FileText, Calculator, Star, Phone, User, LogOut, Heart, ArrowLeftRight, MapPin, Calendar, ShieldCheck, BookOpen, Youtube, Search } from "lucide-react";
 import logo from "@/assets/dreamdrive-logo.png";
 import { useAuth } from "@/context/AuthContext";
+import { loadCarData } from "@/lib/carData";
+import { findBestMatch } from "@/lib/searchUtils";
+import { analyticsApi } from "@/services/analyticsApi";
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { isAuthenticated, user, logout } = useAuth();
@@ -27,6 +32,55 @@ const Navbar = () => {
     }
   };
 
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+
+    setIsSearching(true);
+    try {
+      const cars = await loadCarData();
+      const result = findBestMatch(searchQuery, cars);
+
+      switch (result.type) {
+        case "brand":
+          analyticsApi.logActivity({
+            userId: user?.id,
+            activityType: "SEARCH_BRAND",
+            targetType: "brand",
+            targetValue: result.brand,
+            city: user?.city
+          });
+          navigate(`/brands/${result.brand.toLowerCase()}`);
+          break;
+        case "car":
+          analyticsApi.logActivity({
+            userId: user?.id,
+            activityType: "SEARCH_CAR",
+            targetType: "car",
+            targetValue: searchQuery,
+            carId: result.id,
+            city: user?.city
+          });
+          navigate(`/car-details/${result.id}`);
+          break;
+        case "multiple":
+        case "none":
+          analyticsApi.logActivity({
+            userId: user?.id,
+            activityType: "SEARCH_PARTIAL",
+            targetValue: searchQuery,
+            city: user?.city
+          });
+          navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
+          break;
+      }
+      setSearchQuery("");
+      setIsMobileMenuOpen(false);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
   const NavItemStyles = "flex items-center gap-1.5 py-2 sm:py-0 hover:text-primary transition-colors text-sm font-medium";
   const DropdownItemStyles = "flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-muted hover:text-primary transition-colors rounded-md";
 
@@ -35,12 +89,31 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
         
         {/* Logo Section */}
-        <Link to="/" className="flex items-center gap-3 z-50" onClick={() => setIsMobileMenuOpen(false)}>
-          <img src={logo} alt="DreamDrive" className="w-8 h-8" />
-          <span className="text-xl font-bold tracking-tight font-sans">
-            Dream<span className="text-gradient-golden">Drive</span>
-          </span>
-        </Link>
+        <div className="flex items-center gap-8">
+          <Link to="/" className="flex items-center gap-3 z-50" onClick={() => setIsMobileMenuOpen(false)}>
+            <img src={logo} alt="DreamDrive" className="w-8 h-8" />
+            <span className="text-xl font-bold tracking-tight font-sans hidden md:inline-block">
+              Dream<span className="text-gradient-golden">Drive</span>
+            </span>
+          </Link>
+
+          {/* Search Bar */}
+          <form 
+            onSubmit={handleSearch}
+            className="relative hidden md:block w-64 lg:w-96 group"
+          >
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className={`w-4 h-4 transition-colors ${isSearching ? "text-primary animate-pulse" : "text-muted-foreground group-focus-within:text-primary"}`} />
+            </div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search brand, model or car..."
+              className="block w-full pl-10 pr-3 py-2 border border-border/50 rounded-full bg-muted/30 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-background transition-all"
+            />
+          </form>
+        </div>
 
         {/* Desktop Navigation */}
         <div className="hidden lg:flex items-center gap-8 text-muted-foreground">
@@ -95,6 +168,13 @@ const Navbar = () => {
                 </Link>
                 <Link to="/#contact" onClick={(e) => handleAnchorClick(e, "#contact")} className={DropdownItemStyles}>
                   <Phone className="w-4 h-4" /> Contact Us
+                </Link>
+                <div className="my-1 border-t border-border/50"></div>
+                <Link to="/expert-reviews" className={DropdownItemStyles}>
+                  <BookOpen className="w-4 h-4 text-primary" /> Expert Reviews
+                </Link>
+                <Link to="/features-explained" className={DropdownItemStyles}>
+                  <Youtube className="w-4 h-4 text-red-500" /> Features Explained
                 </Link>
               </div>
             </div>
@@ -167,6 +247,20 @@ const Navbar = () => {
         <div className="lg:hidden absolute top-20 left-0 right-0 bg-background border-b border-border p-4 shadow-xl max-h-[calc(100vh-5rem)] overflow-y-auto z-40">
           <div className="flex flex-col gap-4">
             
+            {/* Mobile Search */}
+            <form onSubmit={handleSearch} className="relative w-full mb-2">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="w-4 h-4 text-muted-foreground" />
+              </div>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search brand or model..."
+                className="block w-full pl-10 pr-3 py-3 border border-border rounded-xl bg-muted/30 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+              />
+            </form>
+            
             <div className="space-y-2 pb-3 border-b border-border/50">
               <p className="text-xs uppercase font-bold text-muted-foreground ml-2 mb-2">New Cars</p>
               <Link to="/cars/upcoming" className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted" onClick={() => setIsMobileMenuOpen(false)}>
@@ -205,6 +299,12 @@ const Navbar = () => {
               </Link>
               <Link to="/#contact" className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted" onClick={(e) => handleAnchorClick(e, "#contact")}>
                 <Phone className="w-4 h-4" /> Contact Us
+              </Link>
+              <Link to="/expert-reviews" className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted font-medium text-primary" onClick={() => setIsMobileMenuOpen(false)}>
+                <BookOpen className="w-4 h-4" /> Expert Reviews
+              </Link>
+              <Link to="/features-explained" className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted font-medium text-red-600" onClick={() => setIsMobileMenuOpen(false)}>
+                <Youtube className="w-4 h-4" /> Features Explained
               </Link>
             </div>
 

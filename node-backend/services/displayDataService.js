@@ -144,6 +144,7 @@ function buildDisplayCar(csvRow, index) {
   const car = {
     // Identity (always from CSV to maintain mapping)
     displayId: index,
+    id: isReliable ? match.id : null,
     brand: csvRow.brand || "Unknown",
     model: csvRow.model || "Unknown",
     variant: csvRow.variant || "Standard",

@@ -77,7 +77,8 @@ const createBooking = async (req, res) => {
     await prisma.activityLog.create({
       data: {
         userId: parseInt(userId, 10),
-        action: "BOOKING_CREATED",
+        activityType: "BOOKING_CREATED",
+        carId: cIdStr,
         details: JSON.stringify({ bookingId: booking.id, carId: cIdStr, dealer: localDealer.name })
       }
     });
@@ -159,7 +160,8 @@ const cancelBooking = async (req, res) => {
     await prisma.activityLog.create({
       data: {
         userId: parseInt(userId, 10),
-        action: "BOOKING_CANCELLED",
+        activityType: "BOOKING_CANCELLED",
+        carId: booking.carId,
         details: JSON.stringify({ bookingId: booking.id, carId: booking.carId })
       }
     });

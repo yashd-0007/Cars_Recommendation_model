@@ -4,6 +4,7 @@ const NODE_API_BASE = `${CONFIG.NODE_API_URL}/cars`;
 
 export interface DisplayCar {
   displayId: number;
+  id: string | null;
   brand: string;
   model: string;
   variant: string;
@@ -82,4 +83,40 @@ export const carApi = {
     );
     return result.data || [];
   },
+
+  /**
+   * Fetch expert review by car ID
+   */
+  async getExpertReview(id: number): Promise<any | null> {
+    try {
+      const result = await fetchJson<ApiResponse<any>>(`${NODE_API_BASE}/${id}/expert-review`);
+      return result.data || null;
+    } catch {
+      return null;
+    }
+  },
+
+  /**
+   * Fetch features explained videos or generated content by car ID
+   */
+  async getFeaturesExplained(id: number): Promise<{ type: "videos" | "generated", content: any[] } | null> {
+    try {
+      const result = await fetchJson<ApiResponse<{ type: "videos" | "generated", content: any[] }>>(`${NODE_API_BASE}/${id}/features-explained`);
+      return result.data || null;
+    } catch {
+      return null;
+    }
+  },
+
+  /**
+   * Fetch indices of available content
+   */
+  async getContentIndices(): Promise<{ expertReviews: number[], features: number[] }> {
+    try {
+      const result = await fetchJson<ApiResponse<{ expertReviews: number[], features: number[] }>>(`${NODE_API_BASE}/content/indices`);
+      return result.data || { expertReviews: [], features: [] };
+    } catch {
+      return { expertReviews: [], features: [] };
+    }
+  }
 };

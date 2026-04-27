@@ -59,6 +59,7 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { reviewApi, Review } from "@/services/reviewApi";
 
@@ -90,7 +91,7 @@ interface BookingReportItem {
 
 interface ActivityLogItem {
   id: number;
-  action: string;
+  activityType: string;
   details: string;
   timestamp: string;
   user: { name: string; email: string } | null;
@@ -101,12 +102,20 @@ interface UserReportItem {
   name: string;
   email: string;
   role: string;
+  city?: string;
   createdAt: string;
   _count: {
     bookings: number;
     wishlists: number;
     compares: number;
   };
+}
+
+interface AnalyticsReport {
+  topBrands: { name: string; count: number }[];
+  topSearchedModels: { name: string; count: number }[];
+  topWishlisted: { name: string; count: number }[];
+  topCompared: { name: string; count: number }[];
 }
 
 export default function AdminDashboard() {
@@ -116,8 +125,13 @@ export default function AdminDashboard() {
   const [activities, setActivities] = useState<ActivityLogItem[]>([]);
   const [users, setUsers] = useState<UserReportItem[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [analytics, setAnalytics] = useState<AnalyticsReport | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
+  const [cityFilter, setCityFilter] = useState("all");
+
+  const uniqueCities = Array.from(new Set(users.map(u => u.city).filter(Boolean))).sort();
+  const filteredUsers = cityFilter === "all" ? users : users.filter(u => u.city === cityFilter);
 
   useEffect(() => {
     fetchAllData();
@@ -128,25 +142,28 @@ export default function AdminDashboard() {
     try {
       const headers = { "x-user-id": user?.id.toString() || "" };
       
-      const [statsRes, bookingsRes, activityRes, usersRes, reviewsData] = await Promise.all([
+      const [statsRes, bookingsRes, activityRes, usersRes, reviewsData, analyticsRes] = await Promise.all([
         fetch(`${CONFIG.NODE_API_URL}/admin/summary`, { headers }),
         fetch(`${CONFIG.NODE_API_URL}/admin/bookings-report`, { headers }),
         fetch(`${CONFIG.NODE_API_URL}/admin/activity-report`, { headers }),
         fetch(`${CONFIG.NODE_API_URL}/admin/users-report`, { headers }),
-        reviewApi.getAdminReviews()
+        reviewApi.getAdminReviews(),
+        fetch(`${CONFIG.NODE_API_URL}/admin/analytics-report`, { headers })
       ]);
 
-      const [statsData, bookingsData, activityData, usersData] = await Promise.all([
+      const [statsData, bookingsData, activityData, usersData, analyticsData] = await Promise.all([
         statsRes.json(),
         bookingsRes.json(),
         activityRes.json(),
-        usersRes.json()
+        usersRes.json(),
+        analyticsRes.json()
       ]);
 
       if (statsData.success) setStats(statsData.data);
       if (bookingsData.success) setBookings(bookingsData.data);
       if (activityData.success) setActivities(activityData.data);
       if (usersData.success) setUsers(usersData.data);
+      if (analyticsData.success) setAnalytics(analyticsData.data);
       setReviews(reviewsData);
     } catch (error) {
       console.error("Failed to fetch admin data", error);
@@ -278,6 +295,9 @@ export default function AdminDashboard() {
             <TabsTrigger value="activity" className="rounded-lg px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground shrink-0">
               <Activity className="w-4 h-4 mr-2" /> Activity Log
             </TabsTrigger>
+            <TabsTrigger value="analytics" className="rounded-lg px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground shrink-0">
+              <TrendingUp className="w-4 h-4 mr-2" /> Product Insights
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -332,7 +352,7 @@ export default function AdminDashboard() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold text-foreground">
-                            {log.action.replace(/_/g, ' ')}
+                            {log.activityType?.replace(/_/g, ' ') || "Activity"}
                           </p>
                           <p className="text-xs text-muted-foreground truncate">
                             {log.user?.name || "Guest User"} • {log.details}
@@ -492,9 +512,25 @@ export default function AdminDashboard() {
 
           <TabsContent value="users" className="space-y-6">
             <Card className="shadow-sm border-border rounded-2xl overflow-hidden">
-              <CardHeader>
-                <CardTitle className="text-xl">User Directory</CardTitle>
-                <CardDescription>Management and engagement metrics per user</CardDescription>
+              <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <CardTitle className="text-xl">User Directory</CardTitle>
+                  <CardDescription>Management and engagement metrics per user</CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground whitespace-nowrap font-medium">Filter by City:</span>
+                  <Select value={cityFilter} onValueChange={setCityFilter}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="All Cities" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Cities</SelectItem>
+                      {uniqueCities.map(city => (
+                        <SelectItem key={city} value={city as string}>{city}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </CardHeader>
               <CardContent className="p-0">
                 <Table>
@@ -508,9 +544,16 @@ export default function AdminDashboard() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {users.map((u) => (
-                      <TableRow key={u.id}>
-                        <TableCell className="pl-6">
+                    {filteredUsers.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
+                          No users found matching the selected city.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredUsers.map((u) => (
+                        <TableRow key={u.id}>
+                          <TableCell className="pl-6">
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-bold text-xs">
                               {u.name.charAt(0).toUpperCase()}
@@ -542,7 +585,8 @@ export default function AdminDashboard() {
                           </div>
                         </TableCell>
                       </TableRow>
-                    ))}
+                    ))
+                  )}
                   </TableBody>
                 </Table>
               </CardContent>
@@ -576,7 +620,7 @@ export default function AdminDashboard() {
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline" className="font-mono text-[10px]">
-                            {log.action}
+                            {log.activityType}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground font-mono">
@@ -588,6 +632,130 @@ export default function AdminDashboard() {
                 </Table>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="analytics" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card className="shadow-sm border-border rounded-2xl">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 text-emerald-500" />
+                    Top Searched Brands
+                  </CardTitle>
+                  <CardDescription>Brands users are looking for in the navbar</CardDescription>
+                </CardHeader>
+                <CardContent className="h-[300px]">
+                  {analytics?.topBrands && analytics.topBrands.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={analytics.topBrands} layout="vertical" margin={{ left: 40, right: 30 }}>
+                        <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
+                        <XAxis type="number" hide />
+                        <YAxis 
+                          dataKey="name" 
+                          type="category" 
+                          width={80} 
+                          tick={{ fontSize: 12, fontWeight: 500 }}
+                        />
+                        <Tooltip />
+                        <Bar dataKey="count" fill="#10b981" radius={[0, 4, 4, 0]} barSize={20} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="h-full flex items-center justify-center text-muted-foreground text-sm">No search data available</div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-sm border-border rounded-2xl">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Search className="w-5 h-5 text-blue-500" />
+                    Most Searched Models
+                  </CardTitle>
+                  <CardDescription>Specific car models capturing user interest</CardDescription>
+                </CardHeader>
+                <CardContent className="h-[300px]">
+                  {analytics?.topSearchedModels && analytics.topSearchedModels.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={analytics.topSearchedModels} layout="vertical" margin={{ left: 40, right: 30 }}>
+                        <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
+                        <XAxis type="number" hide />
+                        <YAxis 
+                          dataKey="name" 
+                          type="category" 
+                          width={80} 
+                          tick={{ fontSize: 12, fontWeight: 500 }}
+                        />
+                        <Tooltip />
+                        <Bar dataKey="count" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={20} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="h-full flex items-center justify-center text-muted-foreground text-sm">No model search data available</div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-sm border-border rounded-2xl">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Heart className="w-5 h-5 text-red-500" />
+                    Most Wishlisted Cars
+                  </CardTitle>
+                  <CardDescription>Vehicles users want to buy</CardDescription>
+                </CardHeader>
+                <CardContent className="h-[300px]">
+                   {analytics?.topWishlisted && analytics.topWishlisted.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={analytics.topWishlisted} layout="vertical" margin={{ left: 40, right: 30 }}>
+                        <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
+                        <XAxis type="number" hide />
+                        <YAxis 
+                          dataKey="name" 
+                          type="category" 
+                          width={100} 
+                          tick={{ fontSize: 11, fontWeight: 500 }}
+                        />
+                        <Tooltip />
+                        <Bar dataKey="count" fill="#ef4444" radius={[0, 4, 4, 0]} barSize={20} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="h-full flex items-center justify-center text-muted-foreground text-sm">No wishlist data available</div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-sm border-border rounded-2xl">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <ArrowLeftRight className="w-5 h-5 text-amber-500" />
+                    Most Compared Cars
+                  </CardTitle>
+                  <CardDescription>Cars users are actively evaluating</CardDescription>
+                </CardHeader>
+                <CardContent className="h-[300px]">
+                   {analytics?.topCompared && analytics.topCompared.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={analytics.topCompared} layout="vertical" margin={{ left: 40, right: 30 }}>
+                        <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
+                        <XAxis type="number" hide />
+                        <YAxis 
+                          dataKey="name" 
+                          type="category" 
+                          width={100} 
+                          tick={{ fontSize: 11, fontWeight: 500 }}
+                        />
+                        <Tooltip />
+                        <Bar dataKey="count" fill="#f59e0b" radius={[0, 4, 4, 0]} barSize={20} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="h-full flex items-center justify-center text-muted-foreground text-sm">No compare data available</div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </div>

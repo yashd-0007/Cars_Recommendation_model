@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import CarDetailHero from "@/components/CarDetailHero";
+import { Link } from "react-router-dom";
 import CarSpecsGrid from "@/components/CarSpecsGrid";
 import CarHighlights from "@/components/CarHighlights";
 import PriceCard from "@/components/PriceCard";
@@ -89,6 +90,14 @@ const CarDetails = () => {
           {/* Main Left Column (Hero, Highlights, Specs) */}
           <div className="lg:col-span-8">
             <CarDetailHero car={car} />
+            <div className="flex flex-wrap gap-4 mb-8">
+              <Button asChild className="flex-1 sm:flex-none">
+                <Link to={`/expert-review/${car.index}`}>Read Expert Review</Link>
+              </Button>
+              <Button variant="outline" asChild className="flex-1 sm:flex-none text-red-600 hover:text-red-700 hover:bg-red-50">
+                <Link to={`/features-explained/${car.index}`}>Watch Features Explained</Link>
+              </Button>
+            </div>
             <CarHighlights car={car} />
             <CarSpecsGrid car={car} />
           </div>

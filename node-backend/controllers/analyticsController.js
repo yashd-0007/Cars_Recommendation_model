@@ -5,16 +5,20 @@ const prisma = require("../prismaClient");
 // @access  Public/Private
 const logActivity = async (req, res) => {
   try {
-    const { userId, action, details } = req.body;
+    const { userId, activityType, targetType, targetValue, carId, city, details } = req.body;
 
-    if (!action) {
-      return res.status(400).json({ success: false, message: "Action is required for logging." });
+    if (!activityType) {
+      return res.status(400).json({ success: false, message: "Activity type is required for logging." });
     }
 
     const log = await prisma.activityLog.create({
       data: {
         userId: userId ? parseInt(userId, 10) : null,
-        action,
+        activityType,
+        targetType,
+        targetValue,
+        carId: carId ? carId.toString() : null,
+        city,
         details: typeof details === 'object' ? JSON.stringify(details) : details,
       }
     });

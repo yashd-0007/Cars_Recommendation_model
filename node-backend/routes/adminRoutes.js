@@ -4,7 +4,8 @@ const {
   getSummary, 
   getBookingsReport, 
   getActivityReport, 
-  getUsersReport 
+  getUsersReport,
+  getAnalyticsReport
 } = require("../controllers/adminController");
 const { adminOnly } = require("../middleware/authMiddleware");
 
@@ -15,5 +16,6 @@ router.get("/summary", getSummary);
 router.get("/bookings-report", getBookingsReport);
 router.get("/activity-report", getActivityReport);
 router.get("/users-report", getUsersReport);
+router.get("/analytics-report", getAnalyticsReport);
 
 module.exports = router;

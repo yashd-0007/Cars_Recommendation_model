@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Car, formatPrice } from "@/lib/carData";
+import { Car, formatPrice, loadCarData } from "@/lib/carData";
 import CarCard from "./CarCard";
 import { Loader2 } from "lucide-react";
 
-// Fallback high-end cars using local images
-const FEATURED_CARS: Car[] = [
+// Fallback high-end cars using local images to ensure the UI is NEVER empty
+const INITIAL_FEATURED_CARS: Car[] = [
   {
-    index: 101,
+    index: 101, // Temporary index
     brand: "BMW",
     model: "7 Series",
     variant: "740i M Sport",
@@ -89,7 +89,42 @@ const FEATURED_CARS: Car[] = [
 ];
 
 const FeaturedCars = () => {
-  const [isLoading, setIsLoading] = useState(false);
+  const [featuredCars, setFeaturedCars] = useState<Car[]>(INITIAL_FEATURED_CARS);
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
+
+  useEffect(() => {
+    const resolveRealIndices = async () => {
+      try {
+        const allCars = await loadCarData();
+        
+        // Match our hardcoded "placeholders" with real data from the dataset
+        const updatedCars = INITIAL_FEATURED_CARS.map(initialCar => {
+          const realMatch = allCars.find(c => 
+            c.brand.toLowerCase().trim() === initialCar.brand.toLowerCase().trim() && 
+            c.model.toLowerCase().trim() === initialCar.model.toLowerCase().trim()
+          );
+          
+          if (realMatch) {
+            // Keep the premium hardcoded images but use the correct dataset index and specs
+            return {
+              ...initialCar,
+              ...realMatch,
+              // Prioritize our hardcoded premium images if available
+              imageUrl: initialCar.imageUrl || realMatch.imageUrl,
+            };
+          }
+          return initialCar;
+        });
+
+        setFeaturedCars(updatedCars);
+        setIsDataLoaded(true);
+      } catch (error) {
+        console.error("Failed to resolve featured car indices:", error);
+      }
+    };
+
+    resolveRealIndices();
+  }, []);
 
   return (
     <section className="py-20 bg-secondary/20">
@@ -114,25 +149,19 @@ const FeaturedCars = () => {
           </motion.p>
         </div>
 
-        {isLoading ? (
-          <div className="flex justify-center py-20">
-            <Loader2 className="w-10 h-10 text-primary animate-spin" />
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {FEATURED_CARS.map((car, idx) => (
-              <motion.div
-                key={car.index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.1, duration: 0.5 }}
-              >
-                <CarCard car={car} />
-              </motion.div>
-            ))}
-          </div>
-        )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {featuredCars.map((car, idx) => (
+            <motion.div
+              key={`${car.brand}-${car.model}-${car.index}`}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: idx * 0.1, duration: 0.5 }}
+            >
+              <CarCard car={car} index={idx} />
+            </motion.div>
+          ))}
+        </div>
       </div>
     </section>
   );

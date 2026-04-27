@@ -42,7 +42,9 @@ const addCompare = async (req, res) => {
     await prisma.activityLog.create({
       data: {
         userId: parseInt(userId, 10),
-        action: "COMPARE_ADD",
+        activityType: "COMPARE_ADD",
+        targetType: "car",
+        carId: cIdStr,
         details: JSON.stringify({ carId: cIdStr })
       }
     });
@@ -74,7 +76,9 @@ const removeCompare = async (req, res) => {
       await prisma.activityLog.create({
         data: {
           userId: parseInt(userId, 10),
-          action: "COMPARE_REMOVE",
+          activityType: "COMPARE_REMOVE",
+          targetType: "car",
+          carId: cIdStr,
           details: JSON.stringify({ carId: cIdStr })
         }
       });
@@ -103,7 +107,7 @@ const clearCompare = async (req, res) => {
     await prisma.activityLog.create({
       data: {
         userId: parseInt(userId, 10),
-        action: "COMPARE_CLEAR"
+        activityType: "COMPARE_CLEAR"
       }
     });
 

@@ -18,7 +18,7 @@ const SignupForm = () => {
   const [errors, setErrors] = useState<{ name?: string; email?: string; password?: string; city?: string; general?: string }>({});
 
   const validateForm = () => {
-    const newErrors: { name?: string; email?: string; password?: string } = {};
+    const newErrors: { name?: string; email?: string; password?: string; city?: string } = {};
     let isValid = true;
 
     if (!name) {

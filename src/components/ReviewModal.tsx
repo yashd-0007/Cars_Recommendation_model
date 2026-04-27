@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { reviewApi } from "@/services/reviewApi";
 import { useAuth } from "@/context/AuthContext";
+import { containsInappropriateLanguage, MODERATION_ERROR_MESSAGE } from "@/lib/moderation";
 
 interface ReviewModalProps {
   isOpen: boolean;
@@ -15,7 +16,7 @@ interface ReviewModalProps {
   onReviewSubmitted?: () => void;
 }
 
-const ReviewModal = ({ isOpen, onClose }: ReviewModalProps) => {
+const ReviewModal = ({ isOpen, onClose, onReviewSubmitted }: ReviewModalProps) => {
   const { user } = useAuth();
   const [rating, setRating] = useState(5);
   const [hoveredRating, setHoveredRating] = useState(0);
@@ -38,6 +39,11 @@ const ReviewModal = ({ isOpen, onClose }: ReviewModalProps) => {
 
     if (comment.trim().length < 10) {
       toast.error("Please share a bit more about your experience (min 10 characters)");
+      return;
+    }
+
+    if (containsInappropriateLanguage(comment) || containsInappropriateLanguage(displayName)) {
+      toast.error(MODERATION_ERROR_MESSAGE);
       return;
     }
 

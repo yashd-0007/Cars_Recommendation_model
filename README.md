@@ -1,53 +1,44 @@
-# DreamDrive – Car Recommendation System
+# DreamDrive – AI Car Recommendation System
 
 ## About the Project
-DreamDrive is a smart web application that helps you find your perfect car. By taking your budget, income, and preferences into account, the app recommends the best cars for your lifestyle. The recommendations are powered by a custom AI/ML model trained on real-world car datasets.
+DreamDrive is a sophisticated full-stack web application designed to simplify the car-buying journey. By leveraging a custom AI/ML recommendation engine and a curated display-data backend, it provides personalized vehicle suggestions based on a user's financial profile, lifestyle, and technical preferences.
 
-## Features
-- **Smart Recommendations**: Custom car suggestions based on your personal inputs.
-- **Electric Cars Page**: Dedicated section to browse electric vehicles.
-- **Top Recommended**: Hand-picked choices for quick browsing.
-- **EMI Calculator**: Built-in tool to calculate your car loan payments.
-- **Testimonials**: Reviews and feedback section.
-- **Modern Navigation**: Sleek, responsive navbar with smooth dropdowns.
-- **Responsive Design**: Works perfectly on mobile and desktop devices.
+## Key Original Features
+- **AI-Powered Recommendation Engine**: Integrated with a Python FastAPI ML service that analyzes 900+ car variants to find mathematically optimal matches.
+- **Sophisticated Display-Data Service**: A custom Node.js middleware layer that performs fuzzy matching and specs normalization to ensure UI-safe data presentation.
+- **Comprehensive Admin Suite**: A built-in dashboard for system-wide moderation, booking management, and activity analytics.
+- **Interactive Test Drive Booking**: Seamless flow from car discovery to dealership-linked booking management.
+- **Resilient Image Resolution**: A multi-layered fallback system ensuring every car has a visual representation (Model Image → Brand Identity → SVG Placeholder).
+- **Advanced EMI Suite**: Real-time financial modeling with interactive charts to visualize long-term car ownership costs.
 
 ## Tech Stack
-- **React + Vite**
-- **JavaScript**
-- **AI/ML Model** (trained using a car dataset, exported for live use)
-- **GitHub Pages** (deployment)
+- **Frontend**: React 18, TypeScript, Vite, Tailwind CSS, Framer Motion.
+- **Backend (Node.js)**: Express, Prisma ORM, JWT Authentication.
+- **AI Service (Python)**: FastAPI, Scikit-learn (for recommendation logic).
+- **Data**: Curated JSON Registry & Cleaned CSV Dataset.
 
-## How It Works
-1. **User enters details**: You provide your budget and preferences.
-2. **Model processes input**: The AI model analyzes your data.
-3. **Cars are shown**: Recommended cars are instantly presented.
-4. **Smart Imaging**: Missing car images are securely handled via a smart image fallback system (Exact Model Image → Brand Logo → Safe Placeholder).
+## Architecture
+The project follows a modern micro-service inspired architecture:
+1. **Frontend (Vite)**: Handles the premium, animated user experience.
+2. **Main API (Node.js)**: Manages business logic, authentication, and the "Display-Data" normalization layer.
+3. **ML Service (Python)**: Specialized endpoint for high-performance recommendation scoring.
 
 ## Setup Instructions
-To run this project locally, paste the following commands into your terminal:
-
 ```bash
-# Clone the repository
-git clone <your-repository-url>
-
-# Install all project dependencies
+# Install dependencies
 npm install
 
-# Start the local development server
+# Start both Frontend & Backend concurrently
 npm run dev
-
-# Build the project for production
-npm run build
-
-# Deploy the project
-npm run deploy
 ```
 
-## Deployment
-DreamDrive is fully configured to be hosted online using **GitHub Pages**.
+## Data Originality & Attributions
+- **Car Dataset**: Derived from public automotive datasets, cleaned and normalized specifically for the DreamDrive logic.
+- **Display Registry**: Manually curated model-to-spec mapping used for the display-data service.
+- **UI Components**: Custom-built using Shadcn UI primitives, tailored with a unique premium "Golden Gradient" design system.
 
-## Future Improvements
-- Implement a more advanced ML version.
-- Integrate real-time updating car data.
-- Develop user login, saving, and personalization features.
+## Future Roadmap
+- Integration with real-time car pricing APIs.
+- Collaborative filtering for user-based community recommendations.
+- VR/AR 360° car interior previews.
+

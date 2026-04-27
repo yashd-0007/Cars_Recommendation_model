@@ -23,6 +23,7 @@ export interface Car {
   country: string;
   price_normalized: number;
   score: number;
+  id?: string; // Original model ID (e.g. tata_nexon)
   // New fields from display-data service (optional for backwards compat)
   imageUrl?: string | null;
   matchType?: string;
@@ -53,6 +54,7 @@ export interface UserPreferences {
 function displayCarToLegacy(dc: DisplayCar): Car {
   return {
     index: dc.displayId,
+    id: dc.id,
     brand: dc.brand,
     model: dc.model,
     variant: dc.variant,
